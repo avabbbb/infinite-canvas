@@ -1,4 +1,4 @@
-import { useMemo, useRef, useState, type PointerEvent as ReactPointerEvent } from "react";
+import { memo, useMemo, useRef, useState, type PointerEvent as ReactPointerEvent } from "react";
 import { App, Empty, Input, Popconfirm, Select, Spin, Tag } from "antd";
 import { useQuery } from "@tanstack/react-query";
 import { BookOpen, Check, ChevronRight, Download, Eye, FileText, Image as ImageIcon, ListChecks, Music2, Plus, Search, Settings2, Square, Trash2, Type, Video } from "lucide-react";
@@ -286,7 +286,7 @@ function buildInsertPayload(asset: Asset): InsertAssetPayload {
     return { kind: "image", dataUrl: asset.data.dataUrl, storageKey: asset.data.storageKey, title: asset.title };
 }
 
-function CanvasAssetsTab({ onInsert, theme }: { onInsert: (payload: InsertAssetPayload) => void; theme: CanvasTheme }) {
+const CanvasAssetsTab = memo(function CanvasAssetsTab({ onInsert, theme }: { onInsert: (payload: InsertAssetPayload) => void; theme: CanvasTheme }) {
     const { message } = App.useApp();
     const assets = useAssetStore((state) => state.assets);
     const addAsset = useAssetStore((state) => state.addAsset);
@@ -398,7 +398,7 @@ function CanvasAssetsTab({ onInsert, theme }: { onInsert: (payload: InsertAssetP
             </div>
         </div>
     );
-}
+});
 
 function AssetCard({ asset, theme, onInsert, onRemove }: { asset: Asset; theme: CanvasTheme; onInsert: () => void; onRemove: () => void }) {
     return (
@@ -440,7 +440,7 @@ function AssetCover({ asset }: { asset: Asset }) {
 // 提示词库 Tab —— 按来源折叠分组,展开时按需加载,点击复制 / 插入文本节点
 // ---------------------------------------------------------------------------
 
-function CanvasPromptsTab({ onInsert, theme }: { onInsert: (payload: InsertAssetPayload) => void; theme: CanvasTheme }) {
+const CanvasPromptsTab = memo(function CanvasPromptsTab({ onInsert, theme }: { onInsert: (payload: InsertAssetPayload) => void; theme: CanvasTheme }) {
     const { message } = App.useApp();
     const sources = usePromptSourceStore((state) => state.sources);
     const enabledSources = useMemo(() => sources.filter((source) => source.enabled), [sources]);
@@ -486,7 +486,7 @@ function CanvasPromptsTab({ onInsert, theme }: { onInsert: (payload: InsertAsset
             <PromptDetailDialog prompt={detail} onClose={() => setDetail(null)} onCopy={(prompt) => void copyPrompt(prompt)} />
         </div>
     );
-}
+});
 
 function PromptSourceGroup({
     sourceId,

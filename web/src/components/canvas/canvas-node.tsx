@@ -51,7 +51,6 @@ type CanvasNodeProps = {
     onRetryBatchImage?: (node: CanvasNodeData, imageId: string) => void;
     onDeleteBatchImage?: (nodeId: string, imageId: string) => void;
     onRetry?: (node: CanvasNodeData) => void;
-    onGenerateImage?: (node: CanvasNodeData) => void;
     onViewImage?: (node: CanvasNodeData, imageId?: string) => void;
     onContextMenu: (event: React.MouseEvent, nodeId: string) => void;
 };
@@ -70,7 +69,6 @@ type NodeContentRendererProps = {
     onStopEditing: () => void;
     mentionReferences: CanvasResourceReference[];
     onRetry?: (node: CanvasNodeData) => void;
-    onGenerateImage?: (node: CanvasNodeData) => void;
     onToggleBatch?: () => void;
     onSetBatchPrimary?: (imageId: string) => void;
     onDuplicateBatchImage?: (imageId: string) => void;
@@ -115,7 +113,6 @@ export const CanvasNode = React.memo(function CanvasNode({
     onRetryBatchImage,
     onDeleteBatchImage,
     onRetry,
-    onGenerateImage,
     onViewImage,
     onContextMenu,
 }: CanvasNodeProps) {
@@ -396,7 +393,6 @@ export const CanvasNode = React.memo(function CanvasNode({
                         onContentChange={onContentChange}
                         onStopEditing={() => setIsEditingContent(false)}
                         onRetry={onRetry}
-                        onGenerateImage={onGenerateImage}
                         onToggleBatch={() => onToggleBatch?.(data.id)}
                         onSetBatchPrimary={(imageId) => onSetBatchPrimary?.(data.id, imageId)}
                         onDuplicateBatchImage={(imageId) => onDuplicateBatchImage?.(data, imageId)}
@@ -514,33 +510,17 @@ function MissingPluginContent({ theme, type }: Pick<NodeContentRendererProps, "t
     );
 }
 
-function TextContent({ node, theme, isEditingContent, textareaRef, mentionReferences, onContentChange, onStopEditing, onGenerateImage }: NodeContentRendererProps) {
+function TextContent({ node, theme, isEditingContent, textareaRef, mentionReferences, onContentChange, onStopEditing }: NodeContentRendererProps) {
     const { t } = useTranslation();
     const fontSize = node.metadata?.fontSize || 14;
     const textStyle = { fontSize: `${fontSize}px`, lineHeight: `${Math.round(fontSize * 1.65)}px`, color: theme.node.text, boxSizing: "border-box" } as React.CSSProperties;
 
     return (
-        <div className="flex h-full w-full flex-col overflow-hidden pt-8">
-            <button
-                type="button"
-                className="absolute right-3 top-3 z-20 inline-flex h-8 items-center gap-1 rounded-full border px-2.5 text-xs font-medium opacity-85 backdrop-blur-md transition hover:scale-[1.02] hover:opacity-100"
-                style={{ background: `${theme.toolbar.panel}dd`, borderColor: theme.node.stroke, color: theme.node.text }}
-                onClick={(event) => {
-                    event.stopPropagation();
-                    onGenerateImage?.(node);
-                }}
-                onMouseDown={(event) => event.stopPropagation()}
-                onPointerDown={(event) => event.stopPropagation()}
-                title={t("canvas.node.generateImage")}
-                aria-label={t("canvas.node.generateImage")}
-            >
-                <ImageIcon className="size-3.5" />
-                {t("canvas.node.generate")}
-            </button>
+        <div className="flex h-full w-full flex-col overflow-hidden">
             {isEditingContent ? (
                 <CanvasResourceMentionTextarea
                     ref={textareaRef}
-                    className="thin-scrollbar block h-full w-full resize-none overflow-y-auto whitespace-pre-wrap break-words border-none bg-transparent pl-4 pr-14 pt-0 pb-4 m-0 font-mono outline-none select-text appearance-none"
+                    className="thin-scrollbar block h-full w-full resize-none overflow-y-auto whitespace-pre-wrap break-words border-none bg-transparent p-4 m-0 font-mono outline-none select-text appearance-none"
                     style={textStyle}
                     value={node.metadata?.content || ""}
                     references={mentionReferences}
@@ -556,7 +536,7 @@ function TextContent({ node, theme, isEditingContent, textareaRef, mentionRefere
                 />
             ) : (
                 <div
-                    className="thin-scrollbar block h-full w-full overflow-y-auto whitespace-pre-wrap break-words bg-transparent pl-4 pr-14 pt-0 pb-4 font-mono"
+                    className="thin-scrollbar block h-full w-full overflow-y-auto whitespace-pre-wrap break-words bg-transparent p-4 font-mono"
                     style={textStyle}
                     onWheel={(event) => event.stopPropagation()}
                 >

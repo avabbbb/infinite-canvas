@@ -66,6 +66,26 @@ export const CONFIG_STORE_KEY = "infinite-canvas:ai_config_store";
 const CHANNEL_MODEL_SEPARATOR = "::";
 const OPENAI_BASE_URL = "https://api.openai.com";
 const GEMINI_BASE_URL = "https://generativelanguage.googleapis.com";
+const SEEDANCE_BASE_URL = "https://ai.ctaigw.cn";
+const SEEDANCE_MODEL = "cdance2.5-0807";
+
+/** Seedance 2.5 视频脚本（星辰 TokenHub 异步任务协议；不使用模板字符串，复制粘贴不丢符号）。 */
+const SEEDANCE_VIDEO_SCRIPT = [
+    `const apiRoot = /\\/v1$/i.test(baseUrl.replace(/\\/+$/, "")) ? baseUrl.replace(/\\/+$/, "") : baseUrl.replace(/\\/+$/, "") + "/v1";`,
+    `const headers = { "Content-Type": "application/json", Authorization: "Bearer " + apiKey };`,
+    `const task = await request({`,
+    `  method: "post",`,
+    `  url: apiRoot + "/contents/generations/tasks",`,
+    `  headers,`,
+    `  data: { model, content: [{ type: "text", text: prompt }], ratio: params.ratio, duration: Number(params.seconds) || 5, watermark: !!params.watermark },`,
+    `});`,
+    `if (!task.id) throw new Error("创建任务失败: " + JSON.stringify(task));`,
+    `return await poll(`,
+    `  () => request({ method: "get", url: apiRoot + "/contents/generations/tasks/" + task.id, headers }),`,
+    `  (state) => (state.status === "succeeded" ? (state.content && state.content.video_url) || state.video_url || state.url : null),`,
+    `  { intervalMs: 10000, timeoutMs: 600000 },`,
+    `);`,
+].join("\n");
 
 export const defaultConfig: AiConfig = {
     channelMode: "local",
@@ -85,6 +105,14 @@ export const defaultConfig: AiConfig = {
                 { name: "gpt-5.5", capability: "text" },
                 { name: "gpt-4o-mini-tts", capability: "audio" },
             ],
+        },
+        {
+            id: "seedance",
+            name: i18n.t("config.channels.seedanceName"),
+            baseUrl: SEEDANCE_BASE_URL,
+            apiKey: "",
+            apiFormat: "openai",
+            models: [{ name: SEEDANCE_MODEL, capability: "video", script: SEEDANCE_VIDEO_SCRIPT }],
         },
     ],
     model: "default::gpt-image-2",
@@ -223,8 +251,12 @@ export const useConfigStore = create<ConfigStore>()(
                 const persistedState = (persisted || {}) as Partial<ConfigStore>;
                 const persistedConfig = (persistedState.config || {}) as Partial<AiConfig>;
                 const persistedWebdav = (persistedState.webdav || {}) as Partial<WebdavSyncConfig>;
-                const config = { ...defaultConfig, ...persistedConfig };
-                if (!Array.isArray(persistedConfig.channels)) config.channels = [];
+                const persistedChannels = Array.isArray(persistedConfig.channels) ? persistedConfig.channels : [];
+                const config = {
+                    ...defaultConfig,
+                    ...persistedConfig,
+                    channels: [...persistedChannels, ...defaultConfig.channels.filter((preset) => !persistedChannels.some((channel) => channel?.id === preset.id))],
+                };
                 const channels = normalizeChannels(config);
                 const models = modelOptionsFromChannels(channels);
                 return {

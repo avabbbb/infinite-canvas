@@ -458,6 +458,7 @@ export default {
             defaultName: "Default provider",
             newName: "New provider",
             indexedName: "Provider {{index}}",
+            seedanceName: "Seedance (CT Cloud TokenHub)",
         },
         preferences: {
             interface: "Interface",

@@ -4,6 +4,9 @@ import "antd/dist/reset.css";
 import "streamdown/styles.css";
 import "./styles/globals.css";
 import { RouterProvider } from "react-router-dom";
+import { enableTauriHttp } from "@/services/api/tauri-http";
+enableTauriHttp();
+
 
 import { AppProviders } from "@/components/layout/app-providers";
 import "@/i18n";

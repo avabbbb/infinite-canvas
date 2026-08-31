@@ -458,6 +458,7 @@ export default {
             defaultName: "默认渠道",
             newName: "新渠道",
             indexedName: "渠道 {{index}}",
+            seedanceName: "Seedance（星辰 TokenHub）",
         },
         preferences: {
             interface: "界面偏好",

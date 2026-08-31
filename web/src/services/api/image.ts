@@ -233,17 +233,21 @@ function supportsGeminiImageSize(model: string) {
     return value.includes("gemini-3") || value.includes("3.1") || value.includes("3-pro");
 }
 
-function resolveImageSource(item: Record<string, unknown>) {
+async function resolveImageDataUrl(item: Record<string, unknown>) {
     if (typeof item.b64_json === "string" && item.b64_json) {
         return `data:image/png;base64,${item.b64_json}`;
     }
     if (typeof item.url === "string" && item.url) {
-        return item.url;
+        try {
+            return await imageToDataUrl({ dataUrl: item.url });
+        } catch {
+            return item.url;
+        }
     }
     return null;
 }
 
-function parseImagePayload(payload: ImageApiResponse) {
+async function parseImagePayload(payload: ImageApiResponse) {
     if (typeof payload.code === "number" && payload.code !== 0) {
         throw new Error(payload.msg || apiText("requestFailed"));
     }
@@ -252,10 +256,10 @@ function parseImagePayload(payload: ImageApiResponse) {
         || (payload as Record<string, unknown>).images as Array<Record<string, unknown>> | undefined
         || (payload as Record<string, unknown>).results as Array<Record<string, unknown>> | undefined
         || [];
-    const images = imageList
-        .map(resolveImageSource)
-        .filter((value): value is string => Boolean(value))
-        .map((dataUrl) => ({ id: nanoid(), dataUrl }));
+    const images =
+        (await Promise.all(imageList.map(resolveImageDataUrl)))
+            .filter((value): value is string => Boolean(value))
+            .map((dataUrl) => ({ id: nanoid(), dataUrl }));
 
     if (images.length === 0) {
         // Check whether the response contains data in an unrecognized format.
@@ -303,7 +307,8 @@ function readApiErrorMessage(value: unknown): string {
 function readAxiosError(error: unknown, fallback: string) {
     if (axios.isCancel(error)) return apiText("requestCanceled");
     if (axios.isAxiosError(error)) {
-        if (!error.response && error.code === "ERR_NETWORK") return apiText("requestFailed");
+        if (!error.response && error.code === "ERR_NETWORK") return apiText("corsRequired");
+        if (!error.response) return error.message || fallback;
         const responseData = error.response?.data;
         // Prefer the API error from the response body.
         const apiMsg = readApiErrorMessage(responseData);

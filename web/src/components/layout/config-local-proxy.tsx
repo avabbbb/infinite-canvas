@@ -69,7 +69,8 @@ export function ConfigLocalProxy() {
 }
 
 function localProxyCommand(proxyUrl: string) {
-    const command = `npx ${LOCAL_PROXY_PACKAGE}`;
+    // Pinned to @latest because npx otherwise reuses whatever version it already cached.
+    const command = `npx ${LOCAL_PROXY_PACKAGE}@latest`;
     try {
         const port = new URL(normalizeLocalProxyUrl(proxyUrl) || DEFAULT_LOCAL_PROXY_URL).port;
         return port && port !== new URL(DEFAULT_LOCAL_PROXY_URL).port ? `${command} --port ${port}` : command;

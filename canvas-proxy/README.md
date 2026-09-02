@@ -7,15 +7,17 @@ Infinite Canvas 的本地转发代理。浏览器直连第三方 AI 接口时经
 ## 使用
 
 ```bash
-npx @basketikun/canvas-proxy
+npx @basketikun/canvas-proxy@latest
 ```
 
 默认监听 `http://127.0.0.1:23210`。把这个地址填进 Infinite Canvas 的「配置 → 本地代理」，并打开开关即可。
 
+带上 `@latest` 是因为 npx 会缓存已下载的版本，不加就可能一直运行旧版本。
+
 可选参数：
 
 ```bash
-npx @basketikun/canvas-proxy --port 23210 --host 127.0.0.1
+npx @basketikun/canvas-proxy@latest --port 23210 --host 127.0.0.1
 ```
 
 也支持 `PORT` / `HOST` 环境变量。

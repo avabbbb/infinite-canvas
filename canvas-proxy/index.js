@@ -119,7 +119,7 @@ export function createProxyServer() {
 
 const args = process.argv.slice(2);
 if (args.includes("--help") || args.includes("-h")) {
-    console.log(`${pkg.name} v${pkg.version}\n\nUsage: npx ${pkg.name} [--port 23210] [--host 127.0.0.1]\n\nForwards http://<host>:<port>/<full-target-url> to <full-target-url> with permissive CORS headers.`);
+    console.log(`${pkg.name} v${pkg.version}\n\nUsage: npx ${pkg.name}@latest [--port 23210] [--host 127.0.0.1]\n\nForwards http://<host>:<port>/<full-target-url> to <full-target-url> with permissive CORS headers.`);
     process.exit(0);
 }
 

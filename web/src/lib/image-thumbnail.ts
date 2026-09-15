@@ -15,7 +15,7 @@ type ImageSourceChoice = {
 
 // Small previews keep panning cheap, but they look soft once the node is magnified.
 // Use the original only when the on-screen size actually needs more pixels than the preview holds.
-export function pickImageSource({ previewUrl, originalUrl, naturalWidth, naturalHeight, renderedWidth, renderedHeight, scale, devicePixelRatio = 1, previewMaxEdge = CANVAS_IMAGE_PREVIEW_MAX_EDGE }: ImageSourceChoice) {
+export function pickImageSource({ previewUrl, originalUrl, naturalWidth, naturalHeight, renderedWidth, renderedHeight, scale, devicePixelRatio = globalThis.devicePixelRatio || 1, previewMaxEdge = CANVAS_IMAGE_PREVIEW_MAX_EDGE }: ImageSourceChoice) {
     if (!previewUrl) return originalUrl;
     const naturalLongEdge = Math.max(naturalWidth || 0, naturalHeight || 0);
     const previewLongEdge = naturalLongEdge > 0 ? Math.min(previewMaxEdge, naturalLongEdge) : previewMaxEdge;

@@ -770,7 +770,6 @@ function ImageContent({
               renderedWidth: node.width,
               renderedHeight: node.height,
               scale,
-              devicePixelRatio: typeof window === "undefined" ? 1 : window.devicePixelRatio,
           })
         : undefined;
 
@@ -843,7 +842,6 @@ function ExpandedImageCard({ node, image, index, scale, onView, onSetPrimary, on
               renderedWidth: node.width,
               renderedHeight: node.height,
               scale,
-              devicePixelRatio: typeof window === "undefined" ? 1 : window.devicePixelRatio,
           })
         : undefined;
 

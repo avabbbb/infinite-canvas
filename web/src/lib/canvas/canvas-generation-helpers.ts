@@ -51,8 +51,8 @@ export async function hydrateCanvasImages(nodes: CanvasNodeData[]) {
             if (node.type !== CanvasNodeType.Image || !metadata || !content) return node;
             const images = await Promise.all((metadata.images || []).map(async (image) => (image.content ? ensureImagePreview({ ...image, content: await resolveImageUrl(image.storageKey, image.content) }) : image)));
             if (metadata.storageKey) {
-                const hydratedMetadata = await ensureImagePreview(metadata);
-                return { ...node, metadata: { ...metadata, ...hydratedMetadata, content: await resolveImageUrl(metadata.storageKey, content), images } };
+                const hydrated = await ensureImagePreview({ ...metadata, content: await resolveImageUrl(metadata.storageKey, content) });
+                return { ...node, metadata: { ...hydrated, images } };
             }
             if (!content.startsWith("data:image/")) return node;
             return { ...node, metadata: { ...metadata, ...imageMetadata(await uploadImage(content)) } };

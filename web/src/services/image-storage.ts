@@ -3,9 +3,12 @@ import localforage from "localforage";
 import { nanoid } from "nanoid";
 import i18n from "@/i18n";
 import { withLocalProxy } from "@/stores/use-config-store";
+import { CANVAS_IMAGE_PREVIEW_VERSION, createImageThumbnail } from "@/lib/image-thumbnail";
 
 export type UploadedImage = {
     url: string;
+    previewUrl?: string;
+    previewVersion?: number;
     storageKey?: string;
     width: number;
     height: number;
@@ -47,10 +50,11 @@ async function storeImage(blob: Blob, options?: ImageReadOptions): Promise<Uploa
         const meta = await loadImageMeta(url, options);
         if (!meta) throw new Error(i18n.t("common.imageReadFailed"));
         throwIfAborted(options?.signal);
+        const previewUrl = await createImageThumbnail(blob).catch(() => undefined);
         await store.setItem(storageKey, blob);
         throwIfAborted(options?.signal);
         objectUrls.set(storageKey, url);
-        return { url, storageKey, width: meta.width, height: meta.height, bytes: blob.size, mimeType: blob.type.startsWith("image/") ? blob.type : "" };
+        return { url, previewUrl, previewVersion: CANVAS_IMAGE_PREVIEW_VERSION, storageKey, width: meta.width, height: meta.height, bytes: blob.size, mimeType: blob.type.startsWith("image/") ? blob.type : "" };
     } catch (error) {
         URL.revokeObjectURL(url);
         await store.removeItem(storageKey).catch(() => undefined);
@@ -143,6 +147,15 @@ export async function resolveImageUrl(storageKey?: string, fallback = "") {
 
 export async function getImageBlob(storageKey: string) {
     return store.getItem<Blob>(storageKey);
+}
+
+// Attach a canvas-sized preview to an already stored image so canvas UI never decodes the original.
+export async function ensureImagePreview<T extends { previewUrl?: string; previewVersion?: number; storageKey?: string }>(image: T) {
+    if (image.previewVersion === CANVAS_IMAGE_PREVIEW_VERSION || !image.storageKey) return image;
+    const blob = await getImageBlob(image.storageKey).catch(() => null);
+    if (!blob) return image;
+    const previewUrl = await createImageThumbnail(blob).catch(() => undefined);
+    return { ...image, previewUrl, previewVersion: CANVAS_IMAGE_PREVIEW_VERSION };
 }
 
 export async function setImageBlob(storageKey: string, blob: Blob) {

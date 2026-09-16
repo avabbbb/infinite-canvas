@@ -1,10 +1,12 @@
 import { FileText, Image as ImageIcon, Music2, Plus, Puzzle, Video, X } from "lucide-react";
 import { Popover } from "antd";
+import { useSyncExternalStore } from "react";
 import { useTranslation } from "react-i18next";
 
 import { canvasThemes } from "@/lib/canvas-theme";
 import { getNodeDefinition } from "@/lib/canvas/node-registry";
 import { getGroupResourceNodes } from "@/lib/canvas/canvas-resource-references";
+import { getImagePreviewRevision, previewUrlFor, subscribeImagePreviews } from "@/services/image-storage";
 import { useThemeStore } from "@/stores/use-theme-store";
 import { CanvasNodeType, type CanvasNodeData } from "@/types/canvas";
 
@@ -28,9 +30,10 @@ export function CanvasNodeReferenceBar({ nodeId, nodes, connectedNodes, onDiscon
 function ReferenceItem({ node, onRemove }: { node: CanvasNodeData; onRemove: () => void }) {
     const { t } = useTranslation();
     const theme = canvasThemes[useThemeStore((state) => state.theme)];
+    useSyncExternalStore(subscribeImagePreviews, getImagePreviewRevision);
     const resource = getNodeDefinition(node.type)?.resource?.(node);
     const content = node.metadata?.content || resource?.url;
-    const thumbnail = node.metadata?.previewUrl || content;
+    const thumbnail = previewUrlFor(node.metadata?.storageKey) || content;
     const Icon = resource?.kind === "image" || node.type === CanvasNodeType.Image ? ImageIcon : resource?.kind === "video" || node.type === CanvasNodeType.Video ? Video : resource?.kind === "audio" || node.type === CanvasNodeType.Audio ? Music2 : resource?.kind === "text" || node.type === CanvasNodeType.Text ? FileText : Puzzle;
     return (
         <Popover placement="topLeft" mouseEnterDelay={0.15} content={<ReferencePreview node={node} content={content} />}>

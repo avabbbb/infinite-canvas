@@ -1,10 +1,11 @@
-import React, { useCallback, useEffect, useMemo, useRef, useState } from "react";
+import React, { useCallback, useEffect, useMemo, useRef, useState, useSyncExternalStore } from "react";
 import type { ReactNode } from "react";
 import { ChevronRight, Copy, Download, Group, Image as ImageIcon, Music2, Puzzle, RefreshCw, Star, Trash2, Video } from "lucide-react";
 
 import { canvasThemes } from "@/lib/canvas-theme";
 import { formatBytes } from "@/lib/image-utils";
 import { pickImageSource } from "@/lib/image-thumbnail";
+import { previewUrlFor, subscribeImagePreviews, getImagePreviewRevision } from "@/services/image-storage";
 import { getNodeDefinition } from "@/lib/canvas/node-registry";
 import { buildNodeContext } from "@/lib/canvas/plugin-node-context";
 import { useThemeStore } from "@/stores/use-theme-store";
@@ -755,15 +756,17 @@ function ImageContent({
 }) {
     const theme = canvasThemes[useThemeStore((state) => state.theme)];
     const { t } = useTranslation();
+    useSyncExternalStore(subscribeImagePreviews, getImagePreviewRevision);
     const images = node.metadata?.images || [];
     const batchCount = images.length;
     const isBatchRoot = batchCount > 1;
     const primaryImageId = node.metadata?.primaryImageId || images[0]?.id;
     const primaryImage = images.find((image) => image.id === primaryImageId);
     const primaryContent = primaryImage?.content || node.metadata?.content;
+    const primaryPreviewUrl = previewUrlFor(primaryImage?.storageKey || node.metadata?.storageKey);
     const primarySource = primaryContent
         ? pickImageSource({
-              previewUrl: primaryImage?.previewUrl || node.metadata?.previewUrl,
+              previewUrl: primaryPreviewUrl,
               originalUrl: primaryContent,
               naturalWidth: primaryImage?.naturalWidth || node.metadata?.naturalWidth,
               naturalHeight: primaryImage?.naturalHeight || node.metadata?.naturalHeight,
@@ -824,6 +827,7 @@ function ImageContent({
 function ExpandedImageCard({ node, image, index, scale, onView, onSetPrimary, onDuplicate, onDownload, onRetry, onDelete }: { node: CanvasNodeData; image: CanvasNodeImage; index: number; scale: number; onView: () => void; onSetPrimary: () => void; onDuplicate: () => void; onDownload: () => void; onRetry: () => void; onDelete: () => void }) {
     const theme = canvasThemes[useThemeStore((state) => state.theme)];
     const { t } = useTranslation();
+    useSyncExternalStore(subscribeImagePreviews, getImagePreviewRevision);
     const count = node.metadata?.images?.length || 0;
     const columns = Math.min(count, 4);
     const rows = Math.ceil(count / columns);
@@ -835,7 +839,7 @@ function ExpandedImageCard({ node, image, index, scale, onView, onSetPrimary, on
     const y = (row - rows + 1) * (node.height + 18);
     const source = image.content
         ? pickImageSource({
-              previewUrl: image.previewUrl,
+              previewUrl: previewUrlFor(image.storageKey),
               originalUrl: image.content,
               naturalWidth: image.naturalWidth,
               naturalHeight: image.naturalHeight,

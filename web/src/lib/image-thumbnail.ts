@@ -1,5 +1,4 @@
 export const CANVAS_IMAGE_PREVIEW_MAX_EDGE = 768;
-export const CANVAS_IMAGE_PREVIEW_VERSION = 3;
 
 type ImageSourceChoice = {
     previewUrl?: string;
@@ -46,5 +45,5 @@ export async function createImageThumbnail(blob: Blob, maxEdge = CANVAS_IMAGE_PR
     }
     context.drawImage(bitmap, 0, 0, width, height);
     bitmap.close();
-    return canvas.toDataURL("image/webp", 0.86);
+    return new Promise<Blob | undefined>((resolve) => canvas.toBlob((result) => resolve(result || undefined), "image/webp", 0.86));
 }

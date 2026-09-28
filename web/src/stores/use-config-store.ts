@@ -154,6 +154,8 @@ export const defaultConfig: AiConfig = {
             models: [
                 { name: "cdance2.5-0807", capability: "video", script: SEEDANCE_VIDEO_SCRIPT },
                 { name: "cdance2.0-0611", capability: "video", script: SEEDANCE_VIDEO_SCRIPT },
+                { name: "cdance2.0-mini-0611", capability: "video", script: SEEDANCE_VIDEO_SCRIPT },
+                { name: "cdance2.0-fast-0611", capability: "video", script: SEEDANCE_VIDEO_SCRIPT },
                 { name: "minimax-h3", capability: "video", script: MINIMAX_VIDEO_SCRIPT },
                 { name: "minimax-h3-max", capability: "video", script: MINIMAX_VIDEO_SCRIPT },
             ],

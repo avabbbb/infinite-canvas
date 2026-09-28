@@ -8,6 +8,7 @@
         "ai-proxy": "node scripts/ai-proxy.mjs",
         "build": "vite build",
         "typecheck": "tsc --noEmit",
+        "test": "bun test",
         "start": "vite preview --host 0.0.0.0 --port 3000",
         "format": "prettier --write .",
         "format:check": "prettier --check ."

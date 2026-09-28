@@ -315,9 +315,10 @@ export const useConfigStore = create<ConfigStore>()(
                         ...persistedChannels.map((channel) => {
                             const preset = defaultConfig.channels.find((p) => p.id === channel?.id);
                             if (!preset) return channel;
-                            const existingNames = new Set((channel.models || []).map((m) => m.name));
-                            const missingModels = preset.models.filter((m) => !existingNames.has(m.name));
-                            return missingModels.length ? { ...channel, models: [...(channel.models || []), ...missingModels] } : channel;
+                            // 对于预设渠道：以 default 模型列表为准，保留用户额外添加的自定义模型
+                            const presetNames = new Set(preset.models.map((m) => m.name));
+                            const userCustomModels = (channel.models || []).filter((m) => !presetNames.has(m.name) && !m.name.startsWith("cdance2.0-") && !m.name.startsWith("cdance2.5-"));
+                            return { ...channel, models: [...preset.models, ...userCustomModels] };
                         }),
                         ...defaultConfig.channels.filter((preset) => !persistedChannels.some((channel) => channel?.id === preset.id)),
                     ],

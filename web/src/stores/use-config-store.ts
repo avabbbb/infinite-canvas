@@ -311,7 +311,16 @@ export const useConfigStore = create<ConfigStore>()(
                 const config = {
                     ...defaultConfig,
                     ...persistedConfig,
-                    channels: [...persistedChannels, ...defaultConfig.channels.filter((preset) => !persistedChannels.some((channel) => channel?.id === preset.id))],
+                    channels: [
+                        ...persistedChannels.map((channel) => {
+                            const preset = defaultConfig.channels.find((p) => p.id === channel?.id);
+                            if (!preset) return channel;
+                            const existingNames = new Set((channel.models || []).map((m) => m.name));
+                            const missingModels = preset.models.filter((m) => !existingNames.has(m.name));
+                            return missingModels.length ? { ...channel, models: [...(channel.models || []), ...missingModels] } : channel;
+                        }),
+                        ...defaultConfig.channels.filter((preset) => !persistedChannels.some((channel) => channel?.id === preset.id)),
+                    ],
                 };
                 const channels = normalizeChannels(config);
                 const models = modelOptionsFromChannels(channels);

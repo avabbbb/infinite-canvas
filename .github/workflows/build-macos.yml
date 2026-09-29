@@ -20,7 +20,7 @@ jobs:
       - name: Setup Node.js
         uses: actions/setup-node@v4
         with:
-          node-version: 20
+          node-version: 22
           cache: npm
           cache-dependency-path: web/package-lock.json
 
@@ -36,9 +36,8 @@ jobs:
         run: npm ci --legacy-peer-deps
 
       - name: Build Tauri app for macOS
-        run: npx tauri build --target aarch64-apple-darwin
+        run: npx tauri build
         env:
-          # CI 环境无需签名，直接出 未签名 DMG
           APPLE_SIGNING_ENABLED: false
 
       - name: Upload DMG artifact

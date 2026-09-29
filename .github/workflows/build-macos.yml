@@ -1,0 +1,52 @@
+name: Build macOS DMG
+
+on:
+  workflow_dispatch:
+  push:
+    tags:
+      - "v*"
+
+jobs:
+  build-macos:
+    runs-on: macos-latest
+    defaults:
+      run:
+        working-directory: web
+
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: 20
+          cache: npm
+          cache-dependency-path: web/package-lock.json
+
+      - name: Setup Rust toolchain
+        uses: dtolnay/rust-toolchain@stable
+
+      - name: Cache Rust build
+        uses: swatinem/rust-cache@v2
+        with:
+          workspaces: web/src-tauri
+
+      - name: Install frontend dependencies
+        run: npm ci --legacy-peer-deps
+
+      - name: Build Tauri app for macOS
+        run: npx tauri build --target aarch64-apple-darwin
+        env:
+          # CI 环境无需签名，直接出 未签名 DMG
+          APPLE_SIGNING_ENABLED: false
+
+      - name: Upload DMG artifact
+        uses: actions/upload-artifact@v4
+        with:
+          name: infinite-canvas-macos-dmg
+          path: |
+            web/src-tauri/target/release/bundle/dmg/*.dmg
+            web/src-tauri/target/release/bundle/macos/*.app
+          if-no-files-found: error
+          retention-days: 30

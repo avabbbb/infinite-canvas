@@ -88,3 +88,25 @@ export const tauriAxiosAdapter: AxiosAdapter = async (config) => {
 export function enableTauriHttp(): void {
     if (isTauri()) axios.defaults.adapter = tauriAxiosAdapter;
 }
+
+/**
+ * 下载远程 URL 为 Blob：Tauri 桌面环境走 Rust 侧 fetch（不受浏览器 CORS 限制），
+ * 网页环境走浏览器 fetch（经本地代理转发）。
+ * 用于生成视频/图片结果落地保存，避免供应商 URL 无 CORS 头时静默失败。
+ */
+export async function fetchUrlAsBlob(url: string): Promise<Blob> {
+    if (!/^https?:/i.test(url)) {
+        const response = await fetch(url);
+        if (!response.ok) throw new Error(`HTTP ${response.status}`);
+        return await response.blob();
+    }
+    if (isTauri()) {
+        const response = await tauriFetch(url);
+        if (!response.ok) throw new Error(`HTTP ${response.status}`);
+        return await response.blob();
+    }
+    const { withLocalProxy } = await import("@/stores/use-config-store");
+    const response = await fetch(withLocalProxy(url));
+    if (!response.ok) throw new Error(`HTTP ${response.status}`);
+    return await response.blob();
+}

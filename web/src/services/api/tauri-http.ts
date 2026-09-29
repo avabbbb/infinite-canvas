@@ -110,3 +110,28 @@ export async function fetchUrlAsBlob(url: string): Promise<Blob> {
     if (!response.ok) throw new Error(`HTTP ${response.status}`);
     return await response.blob();
 }
+
+/**
+ * 保存媒体文件到用户选择的位置：
+ * - Tauri 桌面端弹出原生「另存为」对话框，用户选好目录后直接写文件；
+ * - 网页端回退到浏览器下载（file-saver）。
+ * 返回 true 表示已保存，false 表示用户取消。
+ */
+export async function saveMediaFile(source: string | Blob, suggestedName: string): Promise<boolean> {
+    const blob = typeof source === "string" ? await fetchUrlAsBlob(source) : source;
+    if (isTauri()) {
+        const { save } = await import("@tauri-apps/plugin-dialog");
+        const extension = (suggestedName.split(".").pop() || "bin").toLowerCase();
+        const targetPath = await save({
+            defaultPath: suggestedName,
+            filters: [{ name: extension.toUpperCase(), extensions: [extension] }],
+        });
+        if (!targetPath) return false;
+        const { writeFile } = await import("@tauri-apps/plugin-fs");
+        await writeFile(targetPath, new Uint8Array(await blob.arrayBuffer()));
+        return true;
+    }
+    const { saveAs } = await import("file-saver");
+    saveAs(blob, suggestedName);
+    return true;
+}

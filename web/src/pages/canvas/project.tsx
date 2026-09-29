@@ -3,7 +3,7 @@ import type { ChangeEvent as ReactChangeEvent, DragEvent as ReactDragEvent, Mous
 import { useNavigate, useParams, useSearchParams } from "react-router-dom";
 import { Group, Video } from "lucide-react";
 import { saveAs } from "file-saver";
-import { fetchUrlAsBlob } from "@/services/api/tauri-http";
+import { saveMediaFile } from "@/services/api/tauri-http";
 import { useTranslation } from "react-i18next";
 
 import { requestEdit, requestGeneration, requestImageQuestion } from "@/services/api/image";
@@ -1782,18 +1782,12 @@ function InfiniteCanvasPage() {
         if ((node.type !== CanvasNodeType.Image && node.type !== CanvasNodeType.Video && node.type !== CanvasNodeType.Audio) || !node.metadata?.content) return;
         const filename = `canvas-${node.type}-${node.id}.${node.type === CanvasNodeType.Video ? "mp4" : node.type === CanvasNodeType.Audio ? audioExtension(node.metadata.mimeType) : imageExtension(node.metadata.content)}`;
         const content = node.metadata.content;
-        // 远程 URL：浏览器跨域 download 属性会失效，先取回 Blob 再保存；失败则退回直接打开
-        if (/^https?:/i.test(content)) {
-            try {
-                const blob = await fetchUrlAsBlob(content);
-                saveAs(blob, filename);
-                return;
-            } catch {
-                window.open(content, "_blank");
-                return;
-            }
+        try {
+            await saveMediaFile(content, filename);
+        } catch {
+            // 取回文件失败（远程链接过期等）时退回新标签打开
+            if (/^https?:/i.test(content)) window.open(content, "_blank");
         }
-        saveAs(content, filename);
     }, []);
 
     const downloadBatchImage = useCallback((node: CanvasNodeData, imageId: string) => {
